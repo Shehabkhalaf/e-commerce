@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\AddPromoCodeRequest;
+use App\Http\Resources\PromocodeAdmin;
 use App\Models\Promocode;
 use App\Traits\apiResponse;
 use Illuminate\Http\JsonResponse;
@@ -18,7 +19,8 @@ class PromoCodeController extends Controller
      */
     public function index()
     {
-        $promoCodes = Promocode::all();
+        //Make the collection of all promo codes
+        $promoCodes = PromocodeAdmin::collection(Promocode::all());
         return $this->jsonResponse(200,'Promo code are here',$promoCodes);
     }
 
