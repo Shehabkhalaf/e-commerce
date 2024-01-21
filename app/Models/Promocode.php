@@ -15,4 +15,8 @@ class Promocode extends Model
         'discount'
     ];
     public $timestamps = false;
+    protected $casts = [
+        'started_at' => 'datetime',
+        'expired_at' => 'datetime'
+    ];
 }

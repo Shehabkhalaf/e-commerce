@@ -14,8 +14,8 @@ return new class extends Migration
         Schema::create('promocodes', function (Blueprint $table) {
             $table->id();
             $table->string('promocode')->unique();
-            $table->date('started_at');
-            $table->date('expired_at');
+            $table->timestamp('started_at')->useCurrent();
+            $table->timestamp('expired_at')->useCurrent();
         });
     }
 
