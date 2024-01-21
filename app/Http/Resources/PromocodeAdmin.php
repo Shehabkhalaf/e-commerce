@@ -17,8 +17,8 @@ class PromocodeAdmin extends JsonResource
         return [
             "id" => $this->id,
             "promocode" => $this->promocode,
-            "started_at" => $this->started_at->format('y-m-d'),
-            "expired_at" => $this->expired_at->format('y-m-d'),
+            "started_at" => $this->started_at->format('Y-m-d'),
+            "expired_at" => $this->expired_at->format('Y-m-d'),
             "discount" => $this->discount
         ];
     }
