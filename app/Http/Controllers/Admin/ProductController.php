@@ -55,7 +55,7 @@ class ProductController extends Controller
         if($product)
         {
            $productId = $product->id;
-            $images = json_decode($request->input('images'));
+            $images = json_decode($request->images);
            foreach ($images as $image)
            {
                Product_Images::create([
@@ -66,7 +66,7 @@ class ProductController extends Controller
             //Add product colors
             if ($request->hasAny(['colors']))
             {
-                $colors = json_decode($request->input('colors'));
+                $colors = json_decode($request->colors);
                 foreach ($colors as $color)
                 {
                     Product_Colors::create([
