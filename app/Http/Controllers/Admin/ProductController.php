@@ -55,23 +55,23 @@ class ProductController extends Controller
         if($product)
         {
            $productId = $product->id;
-           $images = json_decode($request->images);
+            $images = json_decode($request->input('images'));
            foreach ($images as $image)
            {
                Product_Images::create([
                    'product_id' => $productId,
-                    'image' => $image,
+                    'image' => $image['img'],
                ]);
            }
             //Add product colors
             if ($request->hasAny(['colors']))
             {
-                $colors = json_decode($request->colors);
+                $colors = json_decode($request->input('colors'));
                 foreach ($colors as $color)
                 {
                     Product_Colors::create([
                         'product_id' => $productId,
-                        'color' => $color,
+                        'color' => $color['name']."|".$color['value'],
                     ]);
                 }
             }
