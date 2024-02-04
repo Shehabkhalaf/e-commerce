@@ -30,12 +30,24 @@ class OrderController extends Controller
     {
         $customers = Order::select('id', 'name', 'email', 'address', 'governorate', 'city', 'postal', 'phone')->get();
         $customers = $customers->unique('email');
+        $allCustomers = [];
         foreach ($customers as $customer){
             $ordersCount = Order::where('email',$customer->email)->count();
             $ordersTotalPrice = Order::where('email',$customer->email)->sum('total_price');
-            $customer['orders_count'] = $ordersCount;
-            $customer['total_paid'] = $ordersTotalPrice;
+            $formattedCustomer = [
+                'id' => $customer['id'],
+                'name' => $customer['name'],
+                'email' => $customer['email'],
+                'address' => $customer['address'],
+                'governorate' => $customer['governorate'],
+                'city' => $customer['city'],
+                'postal' => $customer['postal'],
+                'phone' => $customer['phone'],
+                'orders_count' => $ordersCount,
+                'total_paid' => $ordersTotalPrice,
+            ];
+            $allCustomers[] = $formattedCustomer;
         }
-        return $this->jsonResponse(200,'Here all the customers',$customers);
+        return $this->jsonResponse(200,'Here all the customers',$allCustomers);
     }
 }
