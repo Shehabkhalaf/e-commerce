@@ -39,7 +39,7 @@ Route::prefix('user')->group(function (){
     /*-------Product module-------*/
    Route::get('products',[\App\Http\Controllers\User\ProductController::class,'allProducts']);
    Route::get('products/{id}',[\App\Http\Controllers\User\ProductController::class,'showProduct']);
-   Route::get('categories',[CategoryController::class,'index']);
+   Route::get('categories',[\App\Http\Controllers\User\ProductController::class,'allCategories']);
    /*-------Message module-------*/
    Route::post('contact_us',[\App\Http\Controllers\User\MessageController::class,'sendMessage']);
    /*-------Promo codes-------*/

@@ -17,7 +17,8 @@ class AllCategories extends JsonResource
         return [
             'category_name' => $this->title,
             'category_id' => $this->id,
-            'num_of_products' => $this->products->count()
+            'num_of_products' => $this->products->count(),
+            'earning' => $this->earning
         ];
     }
 }
