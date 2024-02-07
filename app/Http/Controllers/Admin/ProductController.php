@@ -8,9 +8,11 @@ use App\Http\Resources\Products;
 use App\Models\Product;
 use App\Models\Product_Colors;
 use App\Models\Product_Images;
+use App\Models\Product_Sizes;
 use App\Traits\apiResponse;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\File;
 
 class ProductController extends Controller
 {
@@ -26,21 +28,11 @@ class ProductController extends Controller
         $products = Products::collection($products);
         return $this->jsonResponse(200,'Products are here',$products);
     }
-
-    /**
-     * Show the form for creating a new resource.
-     */
-    public function create()
-    {
-        //
-    }
-
     /**
      * Store a newly created resource in storage.
      */
     public function store(AddProductRequest $request): JsonResponse
     {
-        //return $this->jsonResponse(200,'',$request->images);
         //Add product data
         $product = Product::create($request->only([
             'title',
@@ -51,36 +43,26 @@ class ProductController extends Controller
             'stock',
             'barcode'
         ]));
-        //Add images of the product
         if($product)
         {
-           $productId = $product->id;
-            $images = json_decode($request->images,true);
-           foreach ($images as $image)
-           {
-               Product_Images::create([
-                   'product_id' => $productId,
-                    'image' => $image['img'],
-               ]);
-           }
+            //Add images of the product
+            $productId = $product->id;
+            $this->setProductImages($productId,$request->file('images'));
             //Add product colors
             if ($request->hasAny(['colors']))
             {
-                $colors = json_decode($request->colors,true);
-                foreach ($colors as $color)
-                {
-                    Product_Colors::create([
-                        'product_id' => $productId,
-                        'color' => $color['name']."|".$color['value'],
-                    ]);
-                }
+                $this->setProductColors($productId, $request->colors);
+            }
+            //Add product sizes
+            if ($request->hasAny(['sizes']))
+            {
+                $this->setProductSizes($productId, $request->sizes);
             }
             return $this->jsonResponse(201,'Product has been created',$product);
         }
         else
             return $this->jsonResponse(500,'Error has occurred');
     }
-
     /**
      * Display the specified resource.
      */
@@ -90,15 +72,6 @@ class ProductController extends Controller
         $product = new Products($product);
         return $this->jsonResponse(200,'Product is here',$product);
     }
-
-    /**
-     * Show the form for editing the specified resource.
-     */
-    public function edit(string $id)
-    {
-        //
-    }
-
     /**
      * Update the specified resource in storage.
      */
@@ -117,8 +90,8 @@ class ProductController extends Controller
                 'barcode' => 'required|unique:products,barcode',
                 'images' => 'required',
             ]);
-            $colors = json_decode($request->colors);
-            $images = json_decode($request->images);
+            $colors = json_decode($request->colors,true);
+            $images = $request->file('images');
             //Update product
             $updated = $product->update([
                'title' => $request->input('title'),
@@ -134,15 +107,9 @@ class ProductController extends Controller
                 $imageUpdated = true;
                 $colorUpdated = true;
                 //Update product images
-                $product->product_images()->delete();
-                foreach ($images as $image) {
-                   $imageUpdated = Product_Images::create([
-                        'image' => $image,
-                        'product_id' => $product->id
-                    ]);
-                }
+                $this->setProductImages($product->id,$images,true);
                 //Update product colors
-                if($request->input('color'))
+                if($request->hasAny('color'))
                 {
                     $product->product_colors()->delete();
                     foreach ($colors as $color) {
@@ -230,10 +197,74 @@ class ProductController extends Controller
     /**
      * Remove the specified resource from storage.
      */
+    /**
+     * Store images for specific product.
+     */
+    public function setProductImages($productId, $images, $update = false): void
+    {
+        if($update){
+            $product = Product::findOrfail($productId);
+            $this->deleteImages($product->product_images->pluck('image')->toArray());
+            $product->product_images->delete();
+        }
+        foreach ($images as $image)
+        {
+            $imagePath = $image->store('product_images','e-commerce');
+            Product_Images::create([
+                'product_id' => $productId,
+                'image' => asset('images/'.$imagePath),
+            ]);
+        }
+    }
+    /**
+     * Set colors for specific product.
+     */
+    private function setProductColors($productId, $colors, $update = false): void
+    {
+        $colors = json_decode($colors,true);
+        if ($update){
+            $product = Product::findOrFail($productId);
+            $product->product_colors->delete();
+        }
+        foreach ($colors as $color)
+        {
+            Product_Colors::create([
+                'product_id' => $productId,
+                'color' => $color['name']."|".$color['value'],
+            ]);
+        }
+    }
+    /**
+     * Set sizes for specific product.
+     */
+    private function setProductSizes($productId, $sizes, $update = false): void
+    {
+        if ($update){
+            $product = Product::findOrFail($productId);
+            $product->product_sizes->delete();
+        }
+        foreach ($sizes as $size){
+            Product_Sizes::create([
+                'product_id' => $productId,
+                'size' => $size
+            ]);
+        }
+    }
+    private function deleteImages($images)
+    {
+        foreach ($images as $image){
+            $position = strpos($image,'images');
+            $deletedImage = substr($image,$position);
+            File::delete($deletedImage);
+        }
+    }
     public function destroy(string $id): JsonResponse
     {
-        $deleted = Product::destroy($id);
-        if($deleted != 0)
+        $product = Product::findOrFail($id);
+        $images = $product->product_images->pluck('image')->toArray();
+        $this->deleteImages($images);
+        $deleted = $product->delete();
+        if($deleted)
             return $this->jsonResponse(200,'Product deleted successfully');
         return $this->jsonResponse(500,'Error has been occurred');
     }

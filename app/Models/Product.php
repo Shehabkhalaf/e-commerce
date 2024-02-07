@@ -17,7 +17,8 @@ class Product extends Model
         'price',
         'discount',
         'stock',
-        'barcode'
+        'barcode',
+        'sold'
     ];
     public function category(): belongsTo
     {
@@ -30,5 +31,9 @@ class Product extends Model
     public function product_colors(): hasMany
     {
         return  $this->hasMany(Product_Colors::class);
+    }
+    public function product_sizes(): hasMany
+    {
+        return $this->hasMany(Product_Sizes::class);
     }
 }
