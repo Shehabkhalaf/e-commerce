@@ -24,6 +24,7 @@ class Products extends JsonResource
             'discount' => $this->discount,
             'stock' => $this->stock,
             'sold' => $this->sold,
+            'barcode' => $this->barcode,
             'images' => $this->product_images->pluck('image')->toArray(),
             'colors' => $this->product_colors->pluck('color')->toArray(),
             'sizes' => $this->product_sizes->pluck('size')->toArray()

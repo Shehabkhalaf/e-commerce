@@ -13,6 +13,8 @@ use App\Traits\apiResponse;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\File;
+use Illuminate\Support\Facades\Storage;
+
 
 class ProductController extends Controller
 {
@@ -41,13 +43,14 @@ class ProductController extends Controller
             'price',
             'discount',
             'stock',
-            'barcode'
+            'barcode',
+            'deadline',
         ]));
         if($product)
         {
             //Add images of the product
             $productId = $product->id;
-            $this->setProductImages($productId,$request->file('images'));
+            $this->setProductImages($productId,$request->input('images'));
             //Add product colors
             if ($request->hasAny(['colors']))
             {
@@ -209,7 +212,19 @@ class ProductController extends Controller
         }
         foreach ($images as $image)
         {
-            $imagePath = $image->store('product_images','e-commerce');
+            // Get the base64 image data from the JSON request
+            $base64Image = $image;
+            // Extract the image data from the base64 string
+            $data = explode(',', $base64Image);
+            // Decode the base64 image data
+            $decodedImage = base64_decode($data[0]);
+            // Specify the directory where you want to store the image
+            $directory = 'product_images';
+            // Generate a unique filename
+            $filename = uniqid() . '.jpg'; // You may adjust the extension as per the actual image type
+            // Save the decoded image to the specified directory
+            Storage::disk('e-commerce')->put($directory . '/' . $filename, $decodedImage);
+            $imagePath = $directory . '/' . $filename;
             Product_Images::create([
                 'product_id' => $productId,
                 'image' => asset('images/'.$imagePath),
