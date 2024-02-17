@@ -57,7 +57,7 @@ class OrderController extends Controller
             return $this->jsonResponse(500, 'Error has been occurred.');
         }
     }
-    private function cardOrder($request): void
+    private function cardOrder($request)
     {
         //Store the order in database
         $order = Order::create($request->only([
@@ -76,7 +76,7 @@ class OrderController extends Controller
         $this->setOrderDetails($order, $products);
         $this->fatora($order);
     }
-    private function fatora($order): void
+    private function fatora($order)
     {
         $curl = curl_init();
         curl_setopt_array($curl, array(
@@ -111,8 +111,14 @@ class OrderController extends Controller
 
         ));
         $response = curl_exec($curl);
+        $response = json_decode($response,true);
         curl_close($curl);
-        echo $response;
+        if ($response['status'] === 'SUCCESS'){
+            echo $response['result']['checkout_url'];
+            return redirect('http://localhost:5173/');
+        }
+        else
+            return $this->jsonResponse(500,'Error occurred');
     }
     public function successPayment(PaymentRequest $request)
     {
@@ -125,7 +131,7 @@ class OrderController extends Controller
         ]);
         $customerOrder = Order::with('orderDetails')->where('id', $request->order_id)->first();
         $this->sendEmail($customerOrder);
-        return $this->jsonResponse(200, 'Order has been completed successfully.', $payment);
+        return redirect('http://localhost:5173/');
     }
     public function failedPayment(PaymentRequest $request)
     {
@@ -136,7 +142,7 @@ class OrderController extends Controller
             'status' => 'failed',
             'mode' => $request->mode
         ]);
-        return $this->jsonResponse(200, 'Payment failed', $payment);
+        return redirect('http://localhost:5173/');
     }
     private function setOrderDetails($order, $products): void
     {
@@ -144,7 +150,8 @@ class OrderController extends Controller
         foreach ($products as $product) {
             $productDetails = Product::findOrFail($product['product_id']);
             if ($productDetails->deadline) {
-                $price = $productDetails->discount * $product['amount'];
+                $price = $productDetails->price - $productDetails->discount;
+                $price = $price * $product['amount'];
                 OrderDetails::create([
                     'order_id' => $order->id,
                     'product_name' => $productDetails->title,
