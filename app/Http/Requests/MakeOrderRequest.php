@@ -47,8 +47,6 @@ class MakeOrderRequest extends FormRequest
             'city' => 'required|max:20',
             'postal' => 'required|max:10',
             'phone' => 'required|max:15',
-            'promocode' => 'required',
-            'total_price' => 'required',
             'products' => 'required'
         ];
     }

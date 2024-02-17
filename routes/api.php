@@ -46,4 +46,6 @@ Route::prefix('user')->group(function (){
     Route::get('promocodes',[PromoCodeController::class,'index']);
     /*-------Order module -------*/
     Route::post('make_order',[\App\Http\Controllers\User\OrderController::class,'makeOrder']);
+    Route::get('success',[\App\Http\Controllers\User\OrderController::class,'successPayment']);
+    Route::get('failure',[\App\Http\Controllers\User\OrderController::class,'failedPayment']);
 });

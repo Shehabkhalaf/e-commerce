@@ -14,6 +14,7 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Storage;
+use Carbon\Carbon;
 
 
 class ProductController extends Controller
@@ -25,10 +26,21 @@ class ProductController extends Controller
     public function index(): JsonResponse
     {
         //Get products with images
-        $products = Product::with(['product_images','product_colors'])->get();
+        $products = Product::with(['product_images', 'product_colors'])->get();
+        foreach ($products as $product) {
+            if ($product->deadline) {
+                $deadline = Carbon::parse($product->deadline);
+                if (now() > $deadline) {
+                    $product->update([
+                        'deadline' => null,
+                        'discount' => null
+                    ]);
+                }
+            }
+        }
         //Make the products collection
         $products = Products::collection($products);
-        return $this->jsonResponse(200,'Products are here',$products);
+        return $this->jsonResponse(200, 'Products are here', $products);
     }
     /**
      * Store a newly created resource in storage.
@@ -46,34 +58,30 @@ class ProductController extends Controller
             'barcode',
             'deadline',
         ]));
-        if($product)
-        {
+        if ($product) {
             //Add images of the product
             $productId = $product->id;
-            $this->setProductImages($productId,$request->input('images'));
+            $this->setProductImages($productId, $request->input('images'));
             //Add product colors
-            if ($request->hasAny(['colors']))
-            {
+            if ($request->hasAny(['colors'])) {
                 $this->setProductColors($productId, $request->colors);
             }
             //Add product sizes
-            if ($request->hasAny(['sizes']))
-            {
+            if ($request->hasAny(['sizes'])) {
                 $this->setProductSizes($productId, $request->sizes);
             }
-            return $this->jsonResponse(201,'Product has been created',$product);
-        }
-        else
-            return $this->jsonResponse(500,'Error has occurred');
+            return $this->jsonResponse(201, 'Product has been created', $product);
+        } else
+            return $this->jsonResponse(500, 'Error has occurred');
     }
     /**
      * Display the specified resource.
      */
     public function show(string $id): JsonResponse
     {
-        $product = Product::with(['product_images','product_colors'])->where('id',$id)->first();
+        $product = Product::with(['product_images', 'product_colors'])->where('id', $id)->first();
         $product = new Products($product);
-        return $this->jsonResponse(200,'Product is here',$product);
+        return $this->jsonResponse(200, 'Product is here', $product);
     }
     /**
      * Update the specified resource in storage.
@@ -81,8 +89,7 @@ class ProductController extends Controller
     public function update(Request $request, string $id): JsonResponse
     {
         $product = Product::findOrFail($id);
-        if(($request->input('title') != $product->title) && ($request->input('barcode') != $product->barcode))
-        {
+        if (($request->input('title') != $product->title) && ($request->input('barcode') != $product->barcode)) {
             $request->validate([
                 'title' => 'unique:products,title',
                 'category_id' => 'required',
@@ -93,27 +100,25 @@ class ProductController extends Controller
                 'barcode' => 'required|unique:products,barcode',
                 'images' => 'required',
             ]);
-            $colors = json_decode($request->colors,true);
+            $colors = json_decode($request->colors, true);
             $images = $request->file('images');
             //Update product
             $updated = $product->update([
-               'title' => $request->input('title'),
-               'category_id' => $request->input('category_id'),
-               'description' => $request->input('description'),
-               'price' => $request->input('price'),
-               'discount' => $request->input('discount'),
-               'stock' => $request->input('stock'),
-               'barcode' => $request->input('barcode'),
+                'title' => $request->input('title'),
+                'category_id' => $request->input('category_id'),
+                'description' => $request->input('description'),
+                'price' => $request->input('price'),
+                'discount' => $request->input('discount'),
+                'stock' => $request->input('stock'),
+                'barcode' => $request->input('barcode'),
             ]);
-            if($updated)
-            {
+            if ($updated) {
                 $imageUpdated = true;
                 $colorUpdated = true;
                 //Update product images
-                $this->setProductImages($product->id,$images,true);
+                $this->setProductImages($product->id, $images, true);
                 //Update product colors
-                if($request->hasAny('color'))
-                {
+                if ($request->hasAny('color')) {
                     $product->product_colors()->delete();
                     foreach ($colors as $color) {
                         $colorUpdated = Product_Colors::create([
@@ -122,23 +127,15 @@ class ProductController extends Controller
                         ]);
                     }
                 }
-                if($imageUpdated && $colorUpdated)
-                {
-                    return $this->jsonResponse(201,'The product has been updated',$product);
+                if ($imageUpdated && $colorUpdated) {
+                    return $this->jsonResponse(201, 'The product has been updated', $product);
+                } else {
+                    return $this->jsonResponse(500, 'Error in images or colors update', $product);
                 }
-                else
-                {
-                    return $this->jsonResponse(500,'Error in images or colors update',$product);
-                }
+            } else {
+                return $this->jsonResponse(500, 'Error in product update', $product);
             }
-            else
-            {
-                return $this->jsonResponse(500,'Error in product update',$product);
-            }
-
-        }
-        else
-        {
+        } else {
             $requestValidated = $request->validate([
                 'category_id' => 'required',
                 'description' => 'required',
@@ -158,8 +155,7 @@ class ProductController extends Controller
                 'discount' => $request->input('discount'),
                 'stock' => $request->input('stock'),
             ]);
-            if($updated)
-            {
+            if ($updated) {
                 $imageUpdated = true;
                 $colorUpdated = true;
                 //Update product images
@@ -171,8 +167,7 @@ class ProductController extends Controller
                     ]);
                 }
                 //Update product colors
-                if($request->input('color'))
-                {
+                if ($request->input('color')) {
                     $product->product_colors()->delete();
                     foreach ($colors as $color) {
                         $colorUpdated = Product_Colors::create([
@@ -181,18 +176,13 @@ class ProductController extends Controller
                         ]);
                     }
                 }
-                if($imageUpdated && $colorUpdated)
-                {
-                    return $this->jsonResponse(201,'The product has been updateي',$product);
+                if ($imageUpdated && $colorUpdated) {
+                    return $this->jsonResponse(201, 'The product has been updateي', $product);
+                } else {
+                    return $this->jsonResponse(500, 'Error in images or colors update', $product);
                 }
-                else
-                {
-                    return $this->jsonResponse(500,'Error in images or colors update',$product);
-                }
-            }
-            else
-            {
-                return $this->jsonResponse(500,'Error in product update',$product);
+            } else {
+                return $this->jsonResponse(500, 'Error in product update', $product);
             }
         }
     }
@@ -205,13 +195,12 @@ class ProductController extends Controller
      */
     public function setProductImages($productId, $images, $update = false): void
     {
-        if($update){
+        if ($update) {
             $product = Product::findOrfail($productId);
             $this->deleteImages($product->product_images->pluck('image')->toArray());
             $product->product_images->delete();
         }
-        foreach ($images as $image)
-        {
+        foreach ($images as $image) {
             // Get the base64 image data from the JSON request
             $base64Image = $image;
             // Extract the image data from the base64 string
@@ -227,7 +216,7 @@ class ProductController extends Controller
             $imagePath = $directory . '/' . $filename;
             Product_Images::create([
                 'product_id' => $productId,
-                'image' => asset('images/'.$imagePath),
+                'image' => asset('images/' . $imagePath),
             ]);
         }
     }
@@ -236,16 +225,15 @@ class ProductController extends Controller
      */
     private function setProductColors($productId, $colors, $update = false): void
     {
-        $colors = json_decode($colors,true);
-        if ($update){
+        $colors = json_decode($colors, true);
+        if ($update) {
             $product = Product::findOrFail($productId);
             $product->product_colors->delete();
         }
-        foreach ($colors as $color)
-        {
+        foreach ($colors as $color) {
             Product_Colors::create([
                 'product_id' => $productId,
-                'color' => $color['name']."|".$color['value'],
+                'color' => $color['name'] . "|" . $color['value'],
             ]);
         }
     }
@@ -254,11 +242,12 @@ class ProductController extends Controller
      */
     private function setProductSizes($productId, $sizes, $update = false): void
     {
-        if ($update){
+        $sizes = explode(',', $sizes);
+        if ($update) {
             $product = Product::findOrFail($productId);
             $product->product_sizes->delete();
         }
-        foreach ($sizes as $size){
+        foreach ($sizes as $size) {
             Product_Sizes::create([
                 'product_id' => $productId,
                 'size' => $size
@@ -267,9 +256,9 @@ class ProductController extends Controller
     }
     private function deleteImages($images)
     {
-        foreach ($images as $image){
-            $position = strpos($image,'images');
-            $deletedImage = substr($image,$position);
+        foreach ($images as $image) {
+            $position = strpos($image, 'images');
+            $deletedImage = substr($image, $position);
             File::delete($deletedImage);
         }
     }
@@ -279,9 +268,8 @@ class ProductController extends Controller
         $images = $product->product_images->pluck('image')->toArray();
         $this->deleteImages($images);
         $deleted = $product->delete();
-        if($deleted)
-            return $this->jsonResponse(200,'Product deleted successfully');
-        return $this->jsonResponse(500,'Error has been occurred');
+        if ($deleted)
+            return $this->jsonResponse(200, 'Product deleted successfully');
+        return $this->jsonResponse(500, 'Error has been occurred');
     }
-
 }

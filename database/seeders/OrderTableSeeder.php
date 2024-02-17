@@ -14,6 +14,7 @@ class OrderTableSeeder extends Seeder
      */
     public function run(): void
     {
+        $status = ['pending','completed','refunded'];
         $faker = Factory::create();
         for ($i = 1; $i<=1000; $i++){
             Order::create([
@@ -24,9 +25,10 @@ class OrderTableSeeder extends Seeder
                 'city' => $faker->city,
                 'postal' => $faker->postcode,
                 'phone' => $faker->e164PhoneNumber,
-                'status' => 'pending',
+                'status' => $status[rand(0,2)],
                 'promocode' => 'nothing',
-                'total_price' => $faker->randomFloat(2, 50, 200)
+                'total_price' => $faker->randomFloat(2, 50, 200),
+                'created_at' => $faker->dateTimeThisYear->getTimestamp(),
             ]);
         }
     }
