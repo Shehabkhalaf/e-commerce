@@ -2,7 +2,10 @@
 
 namespace App\Http\Requests;
 
+use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Contracts\Validation\Validator;
+use Illuminate\Validation\ValidationException;
 
 class PaymentRequest extends FormRequest
 {
@@ -17,15 +20,31 @@ class PaymentRequest extends FormRequest
     /**
      * Get the validation rules that apply to the request.
      *
-     * @return array<string, \Illuminate\Contracts\Validation\ValidationRule|array<mixed>|string>
+     * @return array<string, ValidationRule|array|string>
      */
     public function rules(): array
     {
         return [
             'transaction_id' => 'required',
-            'order_id' => 'required|exists:orders,id',
+            'order_id' => 'required|exists:orders,id|unique:payments,order_id',
             'mode' => 'required',
             'description' => 'required',
         ];
+    }
+    /**
+     * Handle a failed validation attempt.
+     *
+     * @param  Validator  $validator
+     * @return void
+     *
+     * @throws ValidationException
+     */
+    protected function failedValidation(Validator $validator): void
+    {
+        if ($this->expectsJson()) {
+            throw new ValidationException($validator);
+        }
+        // Abort with a 422 status code and a custom message
+        abort(403, 'You are not authorized to use this link back to the site : http://localhost:5173/');
     }
 }

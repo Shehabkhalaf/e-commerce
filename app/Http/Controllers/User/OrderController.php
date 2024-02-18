@@ -124,16 +124,20 @@ class OrderController extends Controller
     }
     public function successPayment(PaymentRequest $request)
     {
-        $payment = Payment::create([
-            'transaction_id' => $request->transaction_id,
-            'order_id' => $request->order_id,
-            'description' => $request->description,
-            'status' => 'paid',
-            'mode' => $request->mode
-        ]);
-        $customerOrder = Order::with('orderDetails')->where('id', $request->order_id)->first();
-        $this->sendEmail($customerOrder);
-        return redirect('http://localhost:5173/');
+        if ($request->failed()){
+            abort(422,"You can't use this link back to the site: http://localhost:5173/");
+        } else{
+            $payment = Payment::create([
+                'transaction_id' => $request->transaction_id,
+                'order_id' => $request->order_id,
+                'description' => $request->description,
+                'status' => 'paid',
+                'mode' => $request->mode
+            ]);
+            $customerOrder = Order::with('orderDetails')->where('id', $request->order_id)->first();
+            $this->sendEmail($customerOrder);
+            return redirect('http://localhost:5173/');
+        }
     }
     public function failedPayment(PaymentRequest $request)
     {
