@@ -28,7 +28,8 @@ class OrderController extends Controller
         }
         //Call cash order function if the payment card
         else {
-            $this->cardOrder($request);
+            $checkout_url = $this->cardOrder($request);
+            return $this->jsonResponse(200,'',$checkout_url);
         }
     }
     private function cashOrder($request): JsonResponse
@@ -74,7 +75,7 @@ class OrderController extends Controller
         $products = json_decode($request->products, true);
         //Set order details
         $this->setOrderDetails($order, $products);
-        $this->fatora($order);
+        return $this->fatora($order);
     }
     private function fatora($order)
     {
@@ -114,11 +115,12 @@ class OrderController extends Controller
         $response = json_decode($response,true);
         curl_close($curl);
         if ($response['status'] === 'SUCCESS'){
-            echo $response['result']['checkout_url'];
-            return redirect('http://localhost:5173/');
+            return $response['result']['checkout_url'];
         }
-        else
+        else{
+            $order->delete();
             return $this->jsonResponse(500,'Error occurred');
+        }
     }
     public function successPayment(PaymentRequest $request)
     {
