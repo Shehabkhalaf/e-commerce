@@ -76,7 +76,7 @@ class OrderController extends Controller
         $this->setOrderDetails($order, $products);
         $this->fatora($order);
     }
-    private function fatora($order): void
+    private function fatora($order)
     {
         $curl = curl_init();
         curl_setopt_array($curl, array(
