@@ -28,7 +28,8 @@ class OrderController extends Controller
         }
         //Call cash order function if the payment card
         else {
-            $this->cardOrder($request);
+            $checkout_url = $this->cardOrder($request);
+            return $this->jsonResponse(200,'',$checkout_url);
         }
     }
     private function cashOrder($request): JsonResponse
@@ -57,7 +58,7 @@ class OrderController extends Controller
             return $this->jsonResponse(500, 'Error has been occurred.');
         }
     }
-    private function cardOrder($request): void
+    private function cardOrder($request)
     {
         //Store the order in database
         $order = Order::create($request->only([
@@ -74,7 +75,7 @@ class OrderController extends Controller
         $products = json_decode($request->products, true);
         //Set order details
         $this->setOrderDetails($order, $products);
-        $this->fatora($order);
+        return $this->fatora($order);
     }
     private function fatora($order)
     {
@@ -111,21 +112,32 @@ class OrderController extends Controller
 
         ));
         $response = curl_exec($curl);
+        $response = json_decode($response,true);
         curl_close($curl);
-        echo $response;
+        if ($response['status'] === 'SUCCESS'){
+            return $response['result']['checkout_url'];
+        }
+        else{
+            $order->delete();
+            return $this->jsonResponse(500,'Error occurred');
+        }
     }
     public function successPayment(PaymentRequest $request)
     {
-        $payment = Payment::create([
-            'transaction_id' => $request->transaction_id,
-            'order_id' => $request->order_id,
-            'description' => $request->description,
-            'status' => 'paid',
-            'mode' => $request->mode
-        ]);
-        $customerOrder = Order::with('orderDetails')->where('id', $request->order_id)->first();
-        $this->sendEmail($customerOrder);
-        return $this->jsonResponse(200, 'Order has been completed successfully.', $payment);
+        if ($request->failed()){
+            abort(422,"You can't use this link back to the site: http://localhost:5173/");
+        } else{
+            $payment = Payment::create([
+                'transaction_id' => $request->transaction_id,
+                'order_id' => $request->order_id,
+                'description' => $request->description,
+                'status' => 'paid',
+                'mode' => $request->mode
+            ]);
+            $customerOrder = Order::with('orderDetails')->where('id', $request->order_id)->first();
+            $this->sendEmail($customerOrder);
+            return redirect('http://localhost:5173/');
+        }
     }
     public function failedPayment(PaymentRequest $request)
     {
@@ -136,7 +148,7 @@ class OrderController extends Controller
             'status' => 'failed',
             'mode' => $request->mode
         ]);
-        return $this->jsonResponse(200, 'Payment failed', $payment);
+        return redirect('http://localhost:5173/');
     }
     private function setOrderDetails($order, $products): void
     {
@@ -144,7 +156,8 @@ class OrderController extends Controller
         foreach ($products as $product) {
             $productDetails = Product::findOrFail($product['product_id']);
             if ($productDetails->deadline) {
-                $price = $productDetails->discount * $product['amount'];
+                $price = $productDetails->price - $productDetails->discount;
+                $price = $price * $product['amount'];
                 OrderDetails::create([
                     'order_id' => $order->id,
                     'product_name' => $productDetails->title,
