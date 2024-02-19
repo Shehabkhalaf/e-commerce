@@ -27,7 +27,8 @@ class Products extends JsonResource
             'barcode' => $this->barcode,
             'images' => $this->product_images->pluck('image')->toArray(),
             'colors' => $this->product_colors->pluck('color')->toArray(),
-            'sizes' => $this->product_sizes->pluck('size')->toArray()
+            'sizes' => $this->product_sizes->pluck('size')->toArray(),
+            'deadline' => $this->deadline
         ];
     }
 }
