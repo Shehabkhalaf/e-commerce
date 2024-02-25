@@ -15,7 +15,8 @@ class OrderDetails extends Model
         'category',
         'amount',
         'piece_price',
-        'price'
+        'price',
+        'product_image'
     ];
     public function order(): belongsTo
     {

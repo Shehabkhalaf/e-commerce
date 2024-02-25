@@ -171,7 +171,8 @@ class OrderController extends Controller
                     'category' => $productDetails->category->title,
                     'amount' => $product['amount'],
                     'piece_price' => $productDetails->discount,
-                    'price' => $price
+                    'price' => $price,
+                    'product_image' => $productDetails->product_images[0]['image'],
                 ]);
             } else {
                 $price = $productDetails->price * $product['amount'];
