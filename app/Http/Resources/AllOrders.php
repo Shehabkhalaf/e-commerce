@@ -27,7 +27,10 @@ class AllOrders extends JsonResource
             'promocode' => $this->promocode,
             'total_price' => $this->total_price,
             'payment_method' => 'cash',
-            'created_at' => $this->created_at->format('Y-m-d')
+            'created_at' => $this->created_at->format('Y-m-d'),
+            /*'pending_date' => $this->orderStatus->pending->format('Y-m-d - H:i'),
+            'processing_date' => $this->orderStatus->processing->format('Y-m-d - H:i'),
+            'delivered_date' => $this->orderStatus->delivered->format('Y-m-d - H:i'),*/
         ];
     }
 }

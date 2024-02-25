@@ -33,6 +33,8 @@ Route::resource('products', ProductController::class);
 Route::get('orders',[AdminOrderController::class,'orders']);
 Route::get('orders/{id}',[AdminOrderController::class,'orderDetails']);
 Route::get('customers',[AdminOrderController::class,'allCustomers']);
+Route::get('customer_details',[AdminOrderController::class,'customerOrders']);
+Route::get('change_status',[AdminOrderController::class,'changeStatus']);
 
 /*-------User module-------*/
 Route::prefix('user')->group(function (){

@@ -8,6 +8,7 @@ use App\Http\Requests\PaymentRequest;
 use App\Mail\MakeOrderMail;
 use App\Models\Category;
 use App\Models\Order;
+use App\Models\Order_Status;
 use App\Models\OrderDetails;
 use App\Models\Payment;
 use App\Models\Product;
@@ -46,7 +47,10 @@ class OrderController extends Controller
             'promocode',
             'payment_method',
         ]));
-        if ($order) {
+        $orderStatus = Order_Status::create([
+           'order_id' => $order->id
+        ]);
+        if ($order && $orderStatus) {
             $products = json_decode($request->products, true);
             //Set order details
             $this->setOrderDetails($order, $products);
@@ -72,6 +76,9 @@ class OrderController extends Controller
             'promocode',
             'payment_method',
         ]));
+        Order_Status::create([
+            'order_id' => $order->id
+        ]);
         $products = json_decode($request->products, true);
         //Set order details
         $this->setOrderDetails($order, $products);
