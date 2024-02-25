@@ -56,7 +56,10 @@ class OrderController extends Controller
   {
       $orders = Order::where('phone',$request->phone)->get();
       $customerDetails = [
+          'id' => $orders[0]->id,
           'name' => $orders[0]->name,
+          'phone' => $orders[0]->phone,
+          'email' => $orders[0]->email,
           'city' => $orders[0]->city,
           'governorate' => $orders[0]->governorate,
           'street' => $orders[0]->address,
