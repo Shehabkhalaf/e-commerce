@@ -61,7 +61,7 @@ class ProductController extends Controller
         if ($product) {
             //Add images of the product
             $productId = $product->id;
-            $this->setProductImages($productId, $request->images);
+            $this->setProductImages($productId, $request->input('images'));
             //Add product colors
             if ($request->hasAny(['colors'])) {
                 $this->setProductColors($productId, $request->colors);
@@ -195,6 +195,7 @@ class ProductController extends Controller
      */
     public function setProductImages($productId, $images, $update = false): void
     {
+        $images = json_decode($images);
         if ($update) {
             $product = Product::findOrfail($productId);
             $this->deleteImages($product->product_images->pluck('image')->toArray());

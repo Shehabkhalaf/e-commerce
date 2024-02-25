@@ -57,7 +57,11 @@ class OrderController extends Controller
             //Get the order details then send email
             $customerOrder = Order::with('orderDetails')->where('id', $order->id)->first();
             $this->sendEmail($customerOrder);
-            return $this->jsonResponse(201, 'Order has been sent.');
+            $data = [
+                'order' => $order,
+                'order_details' => $order->orderDetails
+            ];
+            return $this->jsonResponse(201, 'Order has been sent.',$data);
         } else {
             return $this->jsonResponse(500, 'Error has been occurred.');
         }
@@ -182,7 +186,8 @@ class OrderController extends Controller
                     'category' => $productDetails->category->title,
                     'amount' => $product['amount'],
                     'piece_price' => $productDetails->price,
-                    'price' => $price
+                    'price' => $price,
+                    'product_image' => $productDetails->product_images[0]['image'],
                 ]);
             }
             $productDetails->update([
