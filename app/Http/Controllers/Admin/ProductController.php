@@ -61,7 +61,7 @@ class ProductController extends Controller
         if ($product) {
             //Add images of the product
             $productId = $product->id;
-            $this->setProductImages($productId, $request->input('images'));
+            $this->setProductImages($productId, $request->images);
             //Add product colors
             if ($request->hasAny(['colors'])) {
                 $this->setProductColors($productId, $request->colors);
@@ -256,7 +256,10 @@ class ProductController extends Controller
     }
     private function deleteImages($images)
     {
-        foreach ($images as $image) {
+        foreach ($images as $key => $image) {
+            if($key == 0){
+                continue;
+            }
             $position = strpos($image, 'images');
             $deletedImage = substr($image, $position);
             File::delete($deletedImage);

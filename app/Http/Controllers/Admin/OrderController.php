@@ -21,7 +21,7 @@ class OrderController extends Controller
   }
   public function orderDetails($id): JsonResponse
   {
-    $order = Order::with(['orderDetails:id,order_id,product_name,category,amount,piece_price,price', 'payment'])->select('id', 'name', 'email', 'address', 'governorate', 'city', 'postal', 'phone')
+    $order = Order::with(['orderDetails:id,order_id,product_name,category,product_image,amount,piece_price,price', 'payment'])->select('id', 'name', 'email', 'address', 'governorate', 'city', 'postal', 'phone', 'payment_method','status', 'created_at')
       ->findOrFail($id);
     $ordersCount = Order::where('email', $order->email)
       ->orWhere('phone', $order->phone)->count();
